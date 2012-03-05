@@ -1,0 +1,73 @@
+
+adslometer v0.1.1 GPL por Jesús Diéguez Fernández
+
+Prerequisitos
+-------------
+
+Para poder utilizar este script deberás tener instalados los siguientes paquetes:
+
+php5 			- Intérprete del lenguaje PHP
+php5-cli 		- Añadido para poder utilizar los scripts PHP directamente desde consola
+php5-mysql		- Añadido para poder escribir datos en la base de datos mysql (gracias a a Raul Viveros por el aviso :))
+gnuplot 		- Programa para generar gráficas
+mysql-server-5.0	- Gestor de base de datos
+
+Si utilizas una distribución de linux basada en debian, será tan sencillo como ejecutar como root lo siguiente:
+
+apt-get install php5 php5-cli php5-mysql gnuplot mysql-server-5.0
+
+
+Contenido
+---------
+
+LEEME.txt			- Este fichero
+GPL-v3.0.txt			- Licencia GPL versión 3
+a_velocidad.sql			- Script de generación de la base de datos, incluye el nombre de la base de datos, un usuario y contraseña por defecto, se recomienda editar este fichero antes de continuar. Sólo es necesario ejecutarlo la primera vez que se instala el programa
+config.php			- Script con las variables de configuración necesarias para que todo funcione correctamente
+functions.php			- Librería de funciones útiles utilizada por los scripts
+adslometer.php			- Script de consola que comprueba los datos actuales del router, los almacena en la base de datos MYSQL y genera una gráfica con los datos de las últimas 6 horas
+dataview.php			- Script de consola que genera una tabla html con los datos de los últimos tres días
+test_router.php			- Script para probar la conectividad con el router, devuelve los valores leidos sin acceder a base de datos. Muy útil para desarrollar nuevos scripts
+test_sms.php			- Script para probar el envío de SMS
+include/			- Carpeta donde se almacenarán los scripts específicos de cada router para obtener los datos del mismo, funcionan a modo de plugin
+	SMC7908A-ISP.php	- Script para el router ADSL de Ya.com con soporte para VOIP
+	Zyxel_HW660.php		- Script para el router ADSL de telefonica (mi router solo tiene soporte para ADSL normal, desconozco si funcionara con versiones con soporte para ADSL2+)
+	Conceptronic_C54APRA2+.php	- Script para el router ADSL de Conceptronic. Soporta ADSL y ADSL2+, he comprobado que la pagina web es muy similar a algún DLINK, así que es posible que sea compatible con alguno
+
+Todos los scripts están debidamente comentados y creo que han quedado bastante legibles, puedes personalizarlos a tu gusto si así­ lo necesitas.
+
+Actualización
+-------------
+
+No es necesario volver a lanzar el script SQL, sólo hay que copiar los nuevos archivos machacando los antiguos.
+
+Instalación
+-----------
+
+Se debe extraer todo el contenido en una carpeta, preferiblemente bajo /usr/share o bajo /opt.
+Para crear la base de datos, después de haber ajustado el nombre de la base de datos, usuario y contraseña en el script 'a_velocidad.sql' que se incluye, sólo tendremos que ejecutar esto:
+
+mysql -u root -p < a_velocidad.sql
+
+Después de eso sólo habrá que escribir 'quit' para salir.
+
+Estos scripts se pueden ejecutar desde un servidor http como apache, haciendo un alias a la carpeta donde se encuentra, pero se recomienda ejecutarlos periódicamente para evitar sobrecargar el servidor y el propio router. Se deberán incluir dos nuevas tareas en cron:
+
+crontab -e
+
+# m h  dom mon dow   command
+0,5,10,15,20,25,30,35,40,45,50,55       *       *       *       *       /usr/share/adslometer/adslometer.php 1>/var/www/adsl_speed.txt &
+1,6,11,16,21,26,31,36,41,46,51,56       *       *       *       *       /usr/share/adslometer/dataview.php 1>/var/www/adsl_data.html &
+
+Y listo, ya tenemos funcionando el adslometer. :)
+
+Comentarios
+-----------
+
+Algunas cosas que mencionar:
+
+	- En la base de datos se ha creado la tabla 'a_velocidad' que contiene los datos obtenidos cada 5 minutos del router. Como utilizar estos datos puede ser muy engorroso ya que hay muchos registros repetidos, se ha creado una vista de esta tabla, llamada 'velocidad' que contiene sólo aquellos registros que son distintos.
+	- El script lo he estado probando durante medio año y ha funcionado correctamente, aun así se encuentra en estado beta.
+
+Espero que os sea útil. :)
+
